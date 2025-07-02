@@ -1,11 +1,11 @@
-name: Cinema CI - Premier Test
+name: Cinema CI/CD - Build + Docker
 
 # Quand déclencher ce pipeline
 on:
   push:
-    branches: [ main ]  # Quand tu push sur main
+    branches: [ main ]
   pull_request:
-    branches: [ main ]  # Ou quand tu fais une pull request
+    branches: [ main ]
 
 jobs:
   # =================== JOB 1: BUILD ET TEST ===================
@@ -24,65 +24,168 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      # Étape 3: Cache Maven (pour aller plus vite)
+      # Étape 3: Cache Maven
       - name: 📦 Cache Maven
         uses: actions/cache@v3
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
 
-      # Étape 4: Build chaque service UN PAR UN
-      - name: 🔨 Build Discovery Server
+      # Étape 4: Build + Package chaque service (avec JAR)
+      - name: 🔨 Build Discovery Server + JAR
         run: |
           echo "🚀 Build du Discovery Server..."
           cd discovery-server
-          mvn clean compile
-          echo "✅ Discovery Server compilé!"
+          mvn clean package -DskipTests
+          echo "✅ Discovery Server compilé + JAR créé!"
 
-      - name: 🔨 Build Config Server
+      - name: 🔨 Build Config Server + JAR
         run: |
           echo "🚀 Build du Config Server..."
           cd config-server
-          mvn clean compile
-          echo "✅ Config Server compilé!"
+          mvn clean package -DskipTests
+          echo "✅ Config Server compilé + JAR créé!"
 
-      - name: 🔨 Build Gateway API
+      - name: 🔨 Build Gateway API + JAR
         run: |
           echo "🚀 Build du Gateway..."
           cd gateway-api
-          mvn clean compile
-          echo "✅ Gateway compilé!"
+          mvn clean package -DskipTests
+          echo "✅ Gateway compilé + JAR créé!"
 
-      - name: 🔨 Build Service Film
+      - name: 🔨 Build Service Film + JAR
         run: |
           echo "🚀 Build du Service Film..."
           cd service-film
-          mvn clean compile
-          echo "✅ Service Film compilé!"
+          mvn clean package -DskipTests
+          echo "✅ Service Film compilé + JAR créé!"
 
-      - name: 🔨 Build Cinema Service
+      - name: 🔨 Build Cinema Service + JAR
         run: |
           echo "🚀 Build du Cinema Service..."
           cd cinema
-          mvn clean compile
-          echo "✅ Cinema Service compilé!"
+          mvn clean package -DskipTests
+          echo "✅ Cinema Service compilé + JAR créé!"
 
-      - name: 🔨 Build User Management
+      - name: 🔨 Build User Management + JAR
         run: |
           echo "🚀 Build du User Management..."
           cd user-management
-          mvn clean compile
-          echo "✅ User Management compilé!"
+          mvn clean package -DskipTests
+          echo "✅ User Management compilé + JAR créé!"
 
-      - name: 🔨 Build Booking Service
+      - name: 🔨 Build Booking Service + JAR
         run: |
           echo "🚀 Build du Booking Service..."
           cd service-reservation
-          mvn clean compile
-          echo "✅ Booking Service compilé!"
+          mvn clean package -DskipTests
+          echo "✅ Booking Service compilé + JAR créé!"
 
-      # Étape 5: Message de fin
       - name: 🎉 Build terminé
         run: |
           echo "🎉 Tous les services ont été compilés avec succès!"
-          echo "🚀 Ton architecture microservices est prête!"
+          echo "📦 Tous les fichiers JAR sont prêts pour Docker!"
+
+  # =================== JOB 2: DOCKER (seulement si build OK) ===================
+  build-docker:
+    needs: build-test  # ← Attend que build-test soit fini
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'  # ← Seulement sur la branche main
+
+    steps:
+      - name: 📥 Récupérer le code
+        uses: actions/checkout@v3
+
+      - name: ☕ Installer Java 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # Rebuild les JARs (nécessaire pour Docker)
+      - name: 📦 Reconstruire tous les JARs
+        run: |
+          echo "🔄 Reconstruction des JARs pour Docker..."
+          for service in discovery-server config-server gateway-api service-film cinema user-management service-reservation; do
+            echo "📦 Build JAR pour $service"
+            cd $service
+            mvn clean package -DskipTests
+            cd ..
+          done
+
+      # Connexion à Docker Hub
+      - name: 🐳 Connexion à Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # Build et Push chaque image Docker
+      - name: 🐳 Build + Push Discovery Server
+        run: |
+          echo "🔨 Build image Discovery Server..."
+          cd discovery-server
+          docker build -t jaouaderr/cinema-discovery-server:latest .
+          docker push jaouaderr/cinema-discovery-server:latest
+          echo "✅ Image discovery-server pushée!"
+
+      - name: 🐳 Build + Push Config Server
+        run: |
+          echo "🔨 Build image Config Server..."
+          cd config-server
+          docker build -t jaouaderr/cinema-config-server:latest .
+          docker push jaouaderr/cinema-config-server:latest
+          echo "✅ Image config-server pushée!"
+
+      - name: 🐳 Build + Push Gateway API
+        run: |
+          echo "🔨 Build image Gateway..."
+          cd gateway-api
+          docker build -t jaouaderr/cinema-gateway-api:latest .
+          docker push jaouaderr/cinema-gateway-api:latest
+          echo "✅ Image gateway-api pushée!"
+
+      - name: 🐳 Build + Push Service Film
+        run: |
+          echo "🔨 Build image Service Film..."
+          cd service-film
+          docker build -t jaouaderr/cinema-service-film:latest .
+          docker push jaouaderr/cinema-service-film:latest
+          echo "✅ Image service-film pushée!"
+
+      - name: 🐳 Build + Push Cinema Service
+        run: |
+          echo "🔨 Build image Cinema..."
+          cd cinema
+          docker build -t jaouaderr/cinema-cinema:latest .
+          docker push jaouaderr/cinema-cinema:latest
+          echo "✅ Image cinema pushée!"
+
+      - name: 🐳 Build + Push User Management
+        run: |
+          echo "🔨 Build image User Management..."
+          cd user-management
+          docker build -t jaouaderr/cinema-user-management:latest .
+          docker push jaouaderr/cinema-user-management:latest
+          echo "✅ Image user-management pushée!"
+
+      - name: 🐳 Build + Push Booking Service
+        run: |
+          echo "🔨 Build image Booking Service..."
+          cd service-reservation
+          docker build -t jaouaderr/cinema-service-reservation:latest .
+          docker push jaouaderr/cinema-service-reservation:latest
+          echo "✅ Image service-reservation pushée!"
+
+      - name: 🎉 Docker terminé
+        run: |
+          echo "🎉 Toutes les images Docker ont été créées et envoyées sur Docker Hub!"
+          echo "🚀 Tes microservices sont maintenant disponibles publiquement!"
+          echo "📋 Images créées:"
+          echo "   - jaouaderr/cinema-discovery-server:latest"
+          echo "   - jaouaderr/cinema-config-server:latest"
+          echo "   - jaouaderr/cinema-gateway-api:latest"
+          echo "   - jaouaderr/cinema-service-film:latest"
+          echo "   - jaouaderr/cinema-cinema:latest"
+          echo "   - jaouaderr/cinema-user-management:latest"
+          echo "   - jaouaderr/cinema-service-reservation:latest"

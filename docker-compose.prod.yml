@@ -1,0 +1,183 @@
+version: '3.8'
+
+services:
+  # =================== BASE DE DONNÉES ===================
+  postgres:
+    image: postgres:15-alpine
+    container_name: cinema-postgres-prod
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD}  # Variable depuis .env
+      POSTGRES_DB: movie
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - cinema-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d movie"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # =================== DISCOVERY SERVER ===================
+  discovery-server:
+    image: jaouaderr/cinema-discovery-server:latest  # ← TON USERNAME
+    container_name: discovery-server-prod
+    ports:
+      - "8761:8761"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - cinema-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # =================== CONFIG SERVER ===================
+  config-server:
+    image: jaouaderr/cinema-config-server:latest  # ← TON USERNAME
+    container_name: config-server-prod
+    ports:
+      - "7888:8888"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+    networks:
+      - cinema-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # =================== API GATEWAY - POINT D'ENTRÉE ! ===================
+  api-gateway:
+    image: jaouaderr/cinema-gateway-api:latest  # ← TON USERNAME
+    container_name: api-gateway-prod
+    ports:
+      - "8080:8080"  # PORT PRINCIPAL pour accéder à l'app
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+      movie-service:
+        condition: service_healthy
+      cinema-service:
+        condition: service_healthy
+      user-management:
+        condition: service_healthy
+      booking-service:
+        condition: service_healthy
+    networks:
+      - cinema-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # =================== SERVICE DE FILMS ===================
+  movie-service:
+    image: jaouaderr/cinema-service-film:latest  # ← TON USERNAME
+    container_name: movie-service-prod
+    # PAS de ports exposés (accès via Gateway seulement)
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      postgres:
+        condition: service_healthy
+      discovery-server:
+        condition: service_healthy
+    networks:
+      - cinema-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # =================== SERVICE DE CINÉMA ===================
+  cinema-service:
+    image: jaouaderr/cinema-cinema:latest  # ← TON USERNAME
+    container_name: cinema-service-prod
+    # PAS de ports exposés (accès via Gateway seulement)
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      postgres:
+        condition: service_healthy
+      discovery-server:
+        condition: service_healthy
+    networks:
+      - cinema-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9090/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # =================== USER MANAGEMENT ===================
+  user-management:
+    image: jaouaderr/cinema-user-management:latest  # ← TON USERNAME
+    container_name: user-management-prod
+    # PAS de ports exposés (accès via Gateway seulement)
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      postgres:
+        condition: service_healthy
+      discovery-server:
+        condition: service_healthy
+    networks:
+      - cinema-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # =================== BOOKING SERVICE ===================
+  booking-service:
+    image: jaouaderr/cinema-service-reservation:latest  # ← TON USERNAME
+    container_name: booking-service-prod
+    # PAS de ports exposés (accès via Gateway seulement)
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      postgres:
+        condition: service_healthy
+      discovery-server:
+        condition: service_healthy
+      user-management:
+        condition: service_healthy
+    networks:
+      - cinema-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7000/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  cinema-network:
+    driver: bridge
