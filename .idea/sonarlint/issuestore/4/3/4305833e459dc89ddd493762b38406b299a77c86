@@ -1,0 +1,6 @@
+
+^
+java:S1192
+"HDefine a constant instead of duplicating this literal "/create" 4 times.(ØİÍñ
+Y
+java:S1214"CMove constants defined in this interfaces to another class or enum.(üöÜ¼

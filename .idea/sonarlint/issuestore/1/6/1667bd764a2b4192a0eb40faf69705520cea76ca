@@ -1,0 +1,8 @@
+
+i
+java:S6204"RReplace this usage of 'Stream.collect(Collectors.toList())' with 'Stream.toList()'(ชจน
+R	java:S125ก"<This block of commented-out lines of code should be removed.(ฬฉ็
+R	java:S125ธ"<This block of commented-out lines of code should be removed.(ทฬฤ๛
+i
+java:S6204ศ"RReplace this usage of 'Stream.collect(Collectors.toList())' with 'Stream.toList()'(ชจน
+W	java:S125โ"<This block of commented-out lines of code should be removed.(นÞูฃ๚ÿÿÿÿ

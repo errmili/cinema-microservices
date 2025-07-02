@@ -1,0 +1,57 @@
+server:
+  port: 9090
+
+spring:
+  application:
+    name: cinema-service
+  config:
+    import: "optional:configserver:http://localhost:8888/"
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    user: postgres
+    password: root
+
+application:
+  config:
+    ticket-url: http://localhost:8080/reservations/v1/tickets
+    projection-url: http://localhost:8080/movies/v1/projections
+    places-url: http://localhost:8080/cinema/v1/places
+
+
+#server:
+#  port: 9090  # Le port de l'API Cinema
+#
+#spring:
+#  application:
+#    name: cinema-service
+#
+#  datasource:
+#    url: jdbc:postgresql://localhost:5432/cinema
+#    username: postgres
+#    password: root
+#    driver-class-name: org.postgresql.Driver
+#
+#  jpa:
+#    hibernate:
+#      ddl-auto: update
+#    database: postgresql
+#    database-platform: org.hibernate.dialect.PostgreSQLDialect
+#
+#springdoc:
+#  default-produces-media-type: application/json
+#
+#
+#
+#logging:
+#  level:
+#    org.hibernate.SQL: DEBUG
+#    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+#
+#
+#eureka:
+#  client:
+#    service-url:
+#      defaultZone: http://localhost:8761/eureka

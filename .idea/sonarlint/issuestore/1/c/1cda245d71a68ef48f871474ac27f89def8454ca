@@ -1,0 +1,18 @@
+
+h
+java:S1128"LRemove this unused import 'io.swagger.v3.oas.annotations.OpenAPIDefinition'.( £µ18ù¤ßû2
+n
+java:S1128"QRemove this unused import 'io.swagger.v3.oas.annotations.enums.SecuritySchemeIn'.(ÔŸ¢8ù¤ßû2
+u
+java:S1128"SRemove this unused import 'io.swagger.v3.oas.annotations.enums.SecuritySchemeType'.(¨ÕÖ ùÿÿÿÿ8‚ù¤ßû2
+i
+java:S1128"GRemove this unused import 'io.swagger.v3.oas.annotations.info.Contact'.(Ç‚ ¡ÿÿÿÿÿ8‚ù¤ßû2
+a
+java:S1128"DRemove this unused import 'io.swagger.v3.oas.annotations.info.Info'.(·ŞŞ8ƒù¤ßû2
+d
+java:S1128"GRemove this unused import 'io.swagger.v3.oas.annotations.info.License'.(¾Ÿ·€8ƒù¤ßû2
+y
+java:S1128	"WRemove this unused import 'io.swagger.v3.oas.annotations.security.SecurityRequirement'.(Œ¶Ìùÿÿÿÿ8ƒù¤ßû2
+o
+java:S1128
+"RRemove this unused import 'io.swagger.v3.oas.annotations.security.SecurityScheme'.(Æ­»¹8ƒù¤ßû2

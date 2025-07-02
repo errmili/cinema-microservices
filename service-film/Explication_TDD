@@ -1,0 +1,60 @@
+Explication détaillée de chaque étape dans TDD :
+Écrire un test avant d'implémenter le code :
+
+Tu commences toujours par écrire un test qui décrit ce que tu attends de ta fonctionnalité. Par exemple, FilmServiceTest teste la méthode createFilm avant même d'implémenter
+la logique dans FilmServiceImpl.
+
+Pourquoi ? : Cela te permet de t'assurer que tu sais exactement ce que ton code doit faire avant de le coder.
+
+Implémenter la logique pour que les tests passent :
+
+Ensuite, tu implémentes la méthode createFilm dans FilmServiceImpl. Cette méthode devra simplement appeler filmRepository.save(film) pour enregistrer un film.
+
+Pourquoi ? : Tu implémentes juste assez de code pour faire passer le test. C’est une approche itérative et minimaliste.
+
+Exécuter les tests :
+
+Après avoir implémenté la méthode, tu exécutes les tests (via JUnit). Les tests vont maintenant passer (si ton code est correct).
+
+Pourquoi ? : Cela te permet de valider immédiatement que ta logique fonctionne comme prévu. Si un test échoue, tu corriges ton code pour que le test passe.
+
+Refactorer le code si nécessaire :
+
+Une fois que les tests passent, tu peux refactorer ton code (le rendre plus propre, plus lisible, etc.) sans changer son comportement.
+
+Pourquoi ? : La refactorisation permet d'améliorer le code sans risquer de casser les fonctionnalités existantes, car tous les tests passent déjà.
+
+Cycle TDD avec un exemple concret (FilmService) :
+Écrire le test : Tu écris le test testCreateFilm pour tester la création d'un film via FilmService.
+
+Implémenter le service : Tu écris la logique pour createFilm dans FilmServiceImpl pour faire passer ce test.
+
+Exécuter le test : Tu fais passer le test (et tu verifies que la logique fonctionne).
+
+Refactorer le code : Si nécessaire, tu rends ton code plus propre sans affecter le comportement.
+
+Écrire d'autres tests : Ensuite, tu écris d'autres tests pour d'autres fonctionnalités (par exemple, récupérer un film par ID).
+
+Ce que tu fais maintenant est en accord avec TDD :
+Création d'un dossier service dans le package test : C'est bien que tu crées un dossier service sous le répertoire test pour organiser les tests liés au service, c'est une bonne pratique.
+
+Interface FilmService : Tu as bien créé l'interface qui définit les méthodes.
+
+Implémentation FilmServiceImpl : Tu implémentes la logique derrière l'interface.
+
+Test unitaire : Tu écris un test unitaire qui garantit que la méthode createFilm fonctionne correctement.
+
+Conclusion :
+Oui, tu suis bien les principes de Test-Driven Development (TDD). En résumé :
+
+Tu écris un test qui définit le comportement attendu.
+
+Tu implémentes la fonctionnalité pour que le test passe.
+
+Tu exécutes les tests pour valider ton code.
+
+Tu refactores ton code si nécessaire.
+
+Tu ajoutes de nouveaux tests pour d'autres fonctionnalités.
+
+En appliquant TDD de cette manière, tu développes un code fiable et bien structuré, tout en garantissant que chaque fonctionnalité fonctionne comme prévu dès le départ.

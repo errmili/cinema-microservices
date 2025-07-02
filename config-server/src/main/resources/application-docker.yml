@@ -1,0 +1,51 @@
+server:
+  port: 8888
+
+spring:
+  application:
+    name: config-server  # Nom cohérent avec docker-compose
+
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/errmili/config-repo.git
+          default-label: main
+          clone-on-start: true
+
+eureka:
+  client:
+    enabled: true  # IMPORTANT : Eureka activé
+    service-url:
+      defaultZone: http://discovery-server:8761/eureka
+    register-with-eureka: true
+    fetch-registry: true
+    # Paramètres pour accélérer l'enregistrement en dev
+    registry-fetch-interval-seconds: 5
+    instance-info-replication-interval-seconds: 5
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 5
+    lease-expiration-duration-in-seconds: 10
+    # Métadonnées utiles pour debug
+    metadata-map:
+      environment: docker-test
+      version: 1.0
+
+# Logging pour debug
+logging:
+  level:
+    org.springframework.cloud.netflix.eureka: DEBUG
+    com.netflix.discovery: INFO
+    org.springframework.cloud.config: INFO
+    root: INFO
+
+# Actuator pour health checks
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,configprops
+  endpoint:
+    health:
+      show-details: always

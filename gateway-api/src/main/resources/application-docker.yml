@@ -1,0 +1,98 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  config:
+    import: # Désactive le config server pour Docker
+
+  main:
+    web-application-type: reactive
+
+  cloud:
+    gateway:
+      # COMPLETEMENT DESACTIVER discovery locator pour éviter les routes automatiques
+      discovery:
+        locator:
+          enabled: false
+      routes:
+        # Routes avec priorité explicite et noms uniques
+        - id: auth-route
+          uri: http://user-management:8083  # Utiliser nom Docker direct
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - AddRequestHeader=X-Request-Foo, Bar
+          metadata:
+            response-timeout: 5000
+            connect-timeout: 3000
+
+        - id: movies-route
+          uri: http://movie-service:8080  # Utiliser nom Docker direct
+          predicates:
+            - Path=/movies/v1/**
+          metadata:
+            response-timeout: 5000
+            connect-timeout: 3000
+
+        - id: reservations-route
+          uri: http://booking-service:7000  # Utiliser nom Docker direct
+          predicates:
+            - Path=/reservations/v1/**
+          metadata:
+            response-timeout: 5000
+            connect-timeout: 3000
+
+        - id: cinema-route
+          uri: http://cinema-service:9090  # Utiliser nom Docker direct
+          predicates:
+            - Path=/cinema/v1/**
+          metadata:
+            response-timeout: 5000
+            connect-timeout: 3000
+
+# Configuration Eureka - SIMPLIFIEE pour Docker
+eureka:
+  client:
+    enabled: false
+    service-url:
+      defaultZone: http://discovery-server:8761/eureka
+    register-with-eureka: true
+    fetch-registry: false  # DÉSACTIVÉ: on utilise les routes manuelles directes
+  instance:
+    prefer-ip-address: false
+    hostname: api-gateway
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
+
+# Configuration JWT
+app:
+  jwt:
+    secret: LnX1yH3pYq6gTbWxV2zQ8uRfNjKrI0VxTk6b2o4D4q9w2U5QjX
+    expirationMs: 3600000
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+
+# Logging avec plus de détails pour debug
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.cloud.gateway.handler.RoutePredicateHandlerMapping: DEBUG
+    org.springframework.cloud.gateway.route: DEBUG
+    reactor.netty.http.client: DEBUG
+    com.netflix.loadbalancer: DEBUG
+    root: INFO
+
+# Désactiver cloud config
+cloud:
+  config:
+    enabled: false

@@ -1,0 +1,55 @@
+server:
+  port: 7000
+
+spring:
+  application:
+    name: booking-service
+  config:
+    import: "optional:configserver:http://localhost:8888/"
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    user: postgres
+    password: root
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          secret: LnX1yH3pYq6gTbWxV2zQ8uRfNjKrI0VxTk6b2o4D4q9w2U5QjX
+
+#server:
+#  port: 7000  # Le port de l'API booking
+#
+#spring:
+#  application:
+#    name: booking-service
+#
+#  datasource:
+#    url: jdbc:postgresql://localhost:5432/booking
+#    username: postgres
+#    password: root
+#    driver-class-name: org.postgresql.Driver
+#
+#  jpa:
+#    hibernate:
+#      ddl-auto: update
+#    database: postgresql
+#    database-platform: org.hibernate.dialect.PostgreSQLDialect
+#
+#springdoc:
+#  default-produces-media-type: application/json
+#
+#
+#
+#logging:
+#  level:
+#    org.hibernate.SQL: DEBUG
+#    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+#
+#eureka:
+#  client:
+#    service-url:
+#      defaultZone: http://localhost:8761/eureka

@@ -1,0 +1,85 @@
+Résumé :
+Terme	                    Exemple concret
+Microservice	            user-service (le code)
+Instance	                user-service qui tourne sur 192.168.1.10:8080 (une copie)
+Plusieurs instances	        user-service qui tourne aussi sur 192.168.1.11 et 192.168.1.12
+
+
+Qu’est-ce que Spring Cloud Eureka ?
+
+Eureka est un service de découverte développé par Netflix, très utilisé dans l’écosystème Spring Cloud.
+
+Son rôle : enregistrer automatiquement les instances de tes microservices (avec leurs adresses IP, ports, etc.) dès qu’ils démarrent,
+et permettre à d’autres services de les localiser sans avoir à coder leurs adresses fixes.
+
+En gros, au lieu de coder en dur l’URL http://localhost:8083 dans ton API Gateway ou un autre service, tu utilises un nom logique,
+comme movie-service, et Eureka s’occupe de retrouver la bonne adresse.
+
+Exemple :
+
+Avant Eureka (sans discovery) :
+        .route("movie-service", r -> r
+            .path("/movies/**")
+            .uri("http://localhost:8082"))  // Adresse codée en dur
+
+Avec Eureka (avec discovery) :
+
+        .route("movie-service", r -> r
+            .path("/movies/**")
+            .uri("lb://movie-service"))  // lb:// indique un load balanced URI via discovery
+
+************************************
+Impact sur les autres services ?
+
+Imaginons que tu as 3 instances de movie-service : A, B, C.
+
+Si l’instance B tombe, Eureka ne la proposera plus comme cible.
+
+Les autres services continueront d’utiliser A et C.
+
+Cela signifie que la panne d’une instance ne bloque pas les autres services qui utilisent ce microservice, tant qu’il reste au
+moins une instance fonctionnelle.
+
+Si toutes les instances d’un service tombent, alors là oui, ce service devient indisponible.
+
+
+*************************************
+
+Exemple simple :
+Imaginons que tu as un microservice appelé user-service. Ce microservice gère tout ce qui concerne les utilisateurs
+(inscription, connexion, profil...).
+
+Situation sans instance multiple
+Tu déploies ton user-service sur une seule machine, par exemple sur l’adresse :
+http://192.168.1.10:8080
+Ici, tu as 1 instance de ton user-service qui tourne.
+
+Situation avec plusieurs instances (pour la montée en charge ou la haute disponibilité)
+Tu déploies ton user-service 3 fois :
+
+Instance 1 : http://192.168.1.10:8080
+
+Instance 2 : http://192.168.1.11:8080
+
+Instance 3 : http://192.168.1.12:8080
+Chacune de ces instances est une copie identique de ton user-service, qui tourne sur un serveur ou une machine
+différente (ou sur des ports différents).
+
+
+Pourquoi faire ça ?
+Si beaucoup d’utilisateurs veulent se connecter en même temps, ces 3 instances peuvent répartir la charge
+(exemple : 1000 utilisateurs répartis sur 3 instances au lieu de saturer une seule).
+
+Si l’une des machines tombe en panne (exemple : la machine à 192.168.1.11 s’éteint), les autres instances continuent à fonctionner.
+
+Cela améliore la disponibilité et la performance.
+
+
+Rôle de Eureka avec ces instances
+Quand chaque instance démarre, elle s’enregistre auprès de Eureka avec son adresse (ex: http://192.168.1.10:8080).
+
+Le service client (comme ton API Gateway) demande à Eureka où trouver user-service.
+
+Eureka renvoie la liste des instances disponibles (les 3 adresses).
+
+Ensuite, le client peut envoyer la requête vers une instance disponible, par exemple l’instance 2 ou 3, pour équilibrer la charge.

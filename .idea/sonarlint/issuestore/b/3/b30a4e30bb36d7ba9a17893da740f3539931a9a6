@@ -1,0 +1,14 @@
+
+^
+java:S22599"HA "NullPointerException" could be thrown; "jwtService" is nullable here.(âñ¼µ
+f
+java:S2259<"PA "NullPointerException" could be thrown; "userDetailsService" is nullable here.(™÷¿¨
+S
+java:S1854!"8Remove this useless assignment to local variable "path".(ß»÷±øÿÿÿÿ
+V	java:S125"<This block of commented-out lines of code should be removed.(¼è÷ïøÿÿÿÿ
+D
+java:S1481!")Remove this unused "path" local variable.(ß»÷±øÿÿÿÿ
+Q	java:S125$"<This block of commented-out lines of code should be removed.(­ÿ¿Þ
+E	java:S106+"+Replace this use of System.out by a logger.(½›¼Èþÿÿÿÿ
+F
+java:S1128"+Remove this unused import 'java.util.List'.(Õë±Äøÿÿÿÿ

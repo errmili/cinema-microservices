@@ -1,0 +1,129 @@
+version: '3.8'
+
+services:
+  # Service de base de données PostgreSQL
+  postgres:
+    image: postgres:15-alpine
+    container_name: cinema-postgres-test
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: movie  # Base par défaut
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql  # Script pour créer toutes les BDD
+    networks:
+      - cinema-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d movie"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Service de découverte Eureka
+  discovery-server:
+    build: ./discovery-server
+    container_name: discovery-server-test
+    ports:
+      - "8761:8761"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - cinema-network
+
+  # Service de configuration
+  config-server:
+    build: ./config-server
+    container_name: config-server-test
+    ports:
+      - "7888:8888"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - discovery-server
+    networks:
+      - cinema-network
+
+  # API Gateway - POINT D'ENTRÉE UNIQUE ! 🚀
+  api-gateway:
+    build: ./gateway-api
+    container_name: api-gateway-test
+    ports:
+      - "8080:8080"  # PORT PRINCIPAL - Point d'entrée unique
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - discovery-server
+      - movie-service
+      - cinema-service
+      - user-management
+      - booking-service
+    networks:
+      - cinema-network
+
+  # Service de films
+  movie-service:
+    build: ./service-film
+    container_name: movie-service-test
+    ports:
+      - "7080:8080"  # Port direct (pour debug)
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - postgres
+      - discovery-server
+    networks:
+      - cinema-network
+
+  # Service de cinéma
+  cinema-service:
+    build: ./cinema
+    container_name: cinema-service-test
+    ports:
+      - "7090:9090"  # Port direct (pour debug)
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - postgres
+      - discovery-server
+    networks:
+      - cinema-network
+
+  # Service de gestion des utilisateurs
+  user-management:
+    build: ./user-management
+    container_name: user-management-test
+    ports:
+      - "7083:8083"  # Port direct (pour debug)
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - postgres
+      - discovery-server
+    networks:
+      - cinema-network
+
+  # Service de réservation
+  booking-service:
+    build: ./service-reservation
+    container_name: booking-service-test
+    ports:
+      - "7000:7000"  # Port direct (pour debug)
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - postgres
+      - discovery-server
+      - user-management
+    networks:
+      - cinema-network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  cinema-network:
+    driver: bridge

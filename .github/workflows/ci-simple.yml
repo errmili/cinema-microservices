@@ -1,0 +1,88 @@
+name: Cinema CI - Premier Test
+
+# Quand déclencher ce pipeline
+on:
+  push:
+    branches: [ main ]  # Quand tu push sur main
+  pull_request:
+    branches: [ main ]  # Ou quand tu fais une pull request
+
+jobs:
+  # =================== JOB 1: BUILD ET TEST ===================
+  build-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Étape 1: Récupérer ton code
+      - name: 📥 Récupérer le code
+        uses: actions/checkout@v3
+
+      # Étape 2: Installer Java 17
+      - name: ☕ Installer Java 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # Étape 3: Cache Maven (pour aller plus vite)
+      - name: 📦 Cache Maven
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+
+      # Étape 4: Build chaque service UN PAR UN
+      - name: 🔨 Build Discovery Server
+        run: |
+          echo "🚀 Build du Discovery Server..."
+          cd discovery-server
+          mvn clean compile
+          echo "✅ Discovery Server compilé!"
+
+      - name: 🔨 Build Config Server
+        run: |
+          echo "🚀 Build du Config Server..."
+          cd config-server
+          mvn clean compile
+          echo "✅ Config Server compilé!"
+
+      - name: 🔨 Build Gateway API
+        run: |
+          echo "🚀 Build du Gateway..."
+          cd gateway-api
+          mvn clean compile
+          echo "✅ Gateway compilé!"
+
+      - name: 🔨 Build Service Film
+        run: |
+          echo "🚀 Build du Service Film..."
+          cd service-film
+          mvn clean compile
+          echo "✅ Service Film compilé!"
+
+      - name: 🔨 Build Cinema Service
+        run: |
+          echo "🚀 Build du Cinema Service..."
+          cd cinema
+          mvn clean compile
+          echo "✅ Cinema Service compilé!"
+
+      - name: 🔨 Build User Management
+        run: |
+          echo "🚀 Build du User Management..."
+          cd user-management
+          mvn clean compile
+          echo "✅ User Management compilé!"
+
+      - name: 🔨 Build Booking Service
+        run: |
+          echo "🚀 Build du Booking Service..."
+          cd service-reservation
+          mvn clean compile
+          echo "✅ Booking Service compilé!"
+
+      # Étape 5: Message de fin
+      - name: 🎉 Build terminé
+        run: |
+          echo "🎉 Tous les services ont été compilés avec succès!"
+          echo "🚀 Ton architecture microservices est prête!"

@@ -1,0 +1,92 @@
+server:
+  port: 7000
+
+spring:
+  application:
+    name: booking-service  # Nom cohérent avec docker-compose
+  config:
+    import: # Désactive le config server pour Docker
+
+  flyway:
+    enabled: false  # Désactivé pour Docker (on utilise JPA pour les tests)
+
+  datasource:
+    url: jdbc:postgresql://postgres:5432/booking
+    username: postgres
+    password: root
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    database: postgresql
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true  # Pour debug
+    defer-datasource-initialization: true
+
+  sql:
+    init:
+      mode: always
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          secret: LnX1yH3pYq6gTbWxV2zQ8uRfNjKrI0VxTk6b2o4D4q9w2U5QjX
+
+eureka:
+  client:
+    enabled: true  # IMPORTANT : Eureka activé
+    service-url:
+      defaultZone: http://discovery-server:8761/eureka
+    register-with-eureka: true
+    fetch-registry: true
+    # Paramètres pour accélérer l'enregistrement en dev
+    registry-fetch-interval-seconds: 5
+    instance-info-replication-interval-seconds: 5
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 5
+    lease-expiration-duration-in-seconds: 10
+    # Métadonnées utiles pour debug
+    metadata-map:
+      environment: docker-test
+      version: 1.0
+
+springdoc:
+  default-produces-media-type: application/json
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+# Configuration des URLs des autres services
+services:
+  user-management:
+    url: http://user-management:8083
+  movie-service:
+    url: http://movie-service:8080
+
+# Logging pour debug
+logging:
+  level:
+    org.springframework.cloud.netflix.eureka: DEBUG
+    com.netflix.discovery: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    com.booking: DEBUG
+    root: INFO
+
+# Actuator pour health checks
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+# Désactiver cloud config
+cloud:
+  config:
+    enabled: false

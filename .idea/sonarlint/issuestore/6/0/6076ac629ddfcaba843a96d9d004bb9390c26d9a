@@ -1,0 +1,12 @@
+
+E	java:S106 "+Replace this use of System.out by a logger.(‘ŒÃÙÿÿÿÿÿ
+E	java:S106!"+Replace this use of System.out by a logger.(ƒÝœìýÿÿÿÿ
+?	java:S106$"+Replace this use of System.out by a logger.(Ê•Ê
+h
+java:S6204<"RReplace this usage of 'Stream.collect(Collectors.toList())' with 'Stream.toList()'(ª™¨¹
+P
+java:S1612;":Replace this lambda with method reference 'Role::getName'.(©¸æž
+E	java:S106D"+Replace this use of System.out by a logger.(œåÿ¡øÿÿÿÿ
+@	java:S106E"+Replace this use of System.out by a logger.(Í³Õœ
+F
+java:S1874L"0Remove this use of "signWith"; it is deprecated.(„¯‹ò

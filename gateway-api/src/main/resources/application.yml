@@ -1,0 +1,95 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  config:
+    import: "optional:configserver:http://localhost:8888/"
+
+#server:
+#  port: 8080  # Le port de l'API Gateway
+#
+#spring:
+#  application:
+#    name: api-gateway  # Nom de l'application
+#
+#  main:
+#    web-application-type: reactive  # Sp�cifie que l'application est r�active
+#
+#
+##  Config before
+##  cloud:
+##    gateway:
+##      routes:
+##        - id: user-management  # Identifiant unique pour cette route
+##          uri: http://localhost:8083  # URI du microservice user-management
+##          predicates:
+##            - Path=/api/auth/**  # Toute requ�te vers /api/auth/** sera redirig�e vers ce microservice
+##          filters:
+##            - AddRequestHeader=X-Request-Foo, Bar  # Exemple de filtre, ajoute un en-t�te � la requ�te (optionnel)
+##
+##        - id: movie-service
+##          uri: http://localhost:8085
+##          predicates:
+##            - Path=/movies/v1/**
+##
+##        - id: booking-service
+##          uri: http://localhost:7000
+##          predicates:
+##            - Path=/reservations/v1/**
+##
+##        - id: cinema-service
+##          uri: http://localhost:9090
+##          predicates:
+##            - Path=/cinema/v1/**
+##  Config before
+#  cloud:
+#    gateway:
+#      discovery:
+#        locator:
+#          enabled: true
+#          lower-case-service-id: true
+#      routes:
+#        - id: user-management
+#          uri: lb://user-management
+#          predicates:
+#            - Path=/api/auth/**
+#          filters:
+#            - AddRequestHeader=X-Request-Foo, Bar
+#
+#        - id: movie-service
+#          uri: lb://movie-service
+#          predicates:
+#            - Path=/movies/v1/**
+#
+#        - id: booking-service
+#          uri: lb://booking-service
+#          predicates:
+#            - Path=/reservations/v1/**
+#
+#        - id: cinema-service
+#          uri: lb://cinema-service
+#          predicates:
+#            - Path=/cinema/v1/**
+#app:
+#  jwt:
+#    secret: LnX1yH3pYq6gTbWxV2zQ8uRfNjKrI0VxTk6b2o4D4q9w2U5QjX
+#    expirationMs: 3600000
+#
+## Le URI pointe vers ton microservice user-management qui tourne sur le port 8083.
+## Toute requ�te vers /api/auth/** sera redirig�e vers ce service
+#
+## Configuration de l'Actuator pour exposer tous les endpoints et observer les routes disponibles
+#management:
+#  endpoints:
+#    web:
+#      exposure:
+#        include: "*"  # Expose tous les endpoints d'Actuator (comme /actuator/health, /actuator/routes, etc.)
+#
+## Actuator : permet de surveiller l'�tat de votre API Gateway et les routes disponibles
+#
+#eureka:
+#  client:
+#    service-url:
+#      defaultZone: http://localhost:8761/eureka

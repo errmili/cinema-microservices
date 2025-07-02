@@ -1,0 +1,1 @@
+ALTER TABLE public.salle DROP COLUMN IF EXISTS nombre_places;

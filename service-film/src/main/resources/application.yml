@@ -1,0 +1,50 @@
+server:
+  port: 7080
+
+spring:
+  application:
+    name: movie-service
+  config:
+    import: "optional:configserver:http://localhost:8888/"
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+#application:
+#  config:
+#    places-url: http://localhost:8080/cinema/v1/places
+#    ticket-url: http://localhost:8080/reservations/v1/tickets
+
+#server:
+#  port: 6000  # Le port de l'API Movies
+#
+#spring:
+#  application:
+#    name: movie-service
+#
+#  datasource:
+#    url: jdbc:postgresql://localhost:5432/movie
+#    username: postgres
+#    password: root
+#    driver-class-name: org.postgresql.Driver
+#
+#  jpa:
+#    hibernate:
+#      ddl-auto: update
+#    database: postgresql
+#    database-platform: org.hibernate.dialect.PostgreSQLDialect
+#
+#springdoc:
+#  default-produces-media-type: application/json
+#
+#logging:
+#  level:
+#    org.hibernate.SQL: DEBUG
+#    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+#
+#eureka:
+#  client:
+#    service-url:
+#      defaultZone: http://localhost:8761/eureka

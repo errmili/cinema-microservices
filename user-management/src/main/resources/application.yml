@@ -1,0 +1,99 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: user-management
+  config:
+    import: "optional:configserver:http://localhost:8888/"
+
+logging:
+  level:
+    org.springframework.cloud.config.client: DEBUG  # Active les logs détaillés pour le client Spring Cloud Config
+
+
+    #first config qui fonctionne
+
+
+#spring:
+#  application:
+#    name: user-management
+
+#  datasource:
+#    url: jdbc:postgresql://localhost:5432/user-management
+#    username: postgres
+#    password: root
+#    driver-class-name: org.postgresql.Driver
+    # Si vous souhaitez activer la gestion du pool de connexions, vous pouvez définir le pool comme suit :
+    # type: com.zaxxer.hikari.HikariDataSource
+    # maximum-pool-size: 10
+
+#  jpa:
+#    hibernate:
+#      ddl-auto: update  # Utiliser "update" en développement, ou "validate" en production
+#    database: postgresql
+#    database-platform: org.hibernate.dialect.PostgreSQLDialect
+#    show-sql: true  # Affiche les requêtes SQL dans les logs, utile pour le débogage
+
+#springdoc:
+#  # Définir le type de réponse par défaut pour les API
+#  default-produces-media-type: application/json
+
+#logging:
+#  level:
+#    # Niveaux de logs pour l'affichage des requêtes SQL Hibernate
+#    org.hibernate.SQL: DEBUG
+#    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+#    # Vous pouvez ajouter d'autres niveaux de log ici si nécessaire
+#
+#  # Si vous souhaitez définir un niveau global pour toute l'application (par exemple, INFO pour tout le projet)
+#  root:
+#    level: INFO
+
+#server:
+#  # Définir le port du serveur ici
+#  port: 8083
+#    # Autres configurations liées au serveur (par exemple, le contexte ou la gestion des erreurs)
+#    # servlet:
+#    #   context-path: /api
+#    # error:
+#    #   whitelabel:
+#    #     enabled: false  # Désactive l'erreur "Whitelabel Error Page" pour les erreurs 404
+#
+#app:
+#  jwt:
+#    secret: LnX1yH3pYq6gTbWxV2zQ8uRfNjKrI0VxTk6b2o4D4q9w2U5QjX
+#    expirationMs: 3600000 # Durée d'expiration du token en millisecondes (1 heure ici)
+#
+#eureka:
+#  client:
+#    service-url:
+#      defaultZone: http://localhost:8761/eureka
+#
+
+
+
+
+
+
+
+
+
+
+# exemple  de BDD en memoire
+
+#spring:
+#  application:
+#    name: name=user-management
+#  datasource:
+#    url: jdbc:h2:mem:testdb
+#    driver-class-name: org.h2.Driver
+#    username: sa
+#    password:
+#  jpa:
+#    database-platform: org.hibernate.dialect.H2Dialect
+#    show-sql: true
+#  h2:
+#    console:
+#      enabled: true
+

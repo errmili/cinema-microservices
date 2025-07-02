@@ -1,0 +1,10 @@
+Étape 5 : Démarrer dans l’ordre
+
+config-server
+
+eureka-server
+
+user-management, movie-service, etc.
+
+api-gateway
+

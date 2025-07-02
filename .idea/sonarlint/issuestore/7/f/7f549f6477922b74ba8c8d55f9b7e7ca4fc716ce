@@ -1,0 +1,3 @@
+
+i
+java:S6204Œ"RReplace this usage of 'Stream.collect(Collectors.toList())' with 'Stream.toList()'(ª™¨¹

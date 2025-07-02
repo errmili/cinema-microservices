@@ -1,0 +1,10 @@
+
+@	java:S106"+Replace this use of System.out by a logger.(Üùýü
+@	java:S106*"+Replace this use of System.out by a logger.(©›‰¡
+E	java:S106+"+Replace this use of System.out by a logger.(¤Ñ÷ªùÿÿÿÿ
+D
+java:S1874-".Remove this use of "parser"; it is deprecated.(¤‹ýà
+P
+java:S1874."5Remove this use of "setSigningKey"; it is deprecated.(Õ÷„Òýÿÿÿÿ
+@	java:S1061"+Replace this use of System.out by a logger.(®Àºš
+?	java:S1065"+Replace this use of System.out by a logger.(Ý‚ø

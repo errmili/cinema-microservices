@@ -1,0 +1,38 @@
+server:
+  port: 8761
+
+spring:
+  application:
+    name: discovery-server
+
+eureka:
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+    service-url:
+      defaultZone: http://discovery-server:8761/eureka  # ✅ CHANGÉ DE localhost
+  server:
+    enable-self-preservation: false
+    eviction-interval-timer-in-ms: 15000
+    expected-client-renewal-interval-seconds: 30
+    renewal-percent-threshold: 0.85
+    response-cache-update-interval-ms: 30000
+  instance:
+    hostname: discovery-server  # ✅ CHANGÉ DE localhost
+    non-secure-port: 8761
+
+# Actuator pour health checks
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,eureka
+  endpoint:
+    health:
+      show-details: always
+
+# Logging pour débugger
+logging:
+  level:
+    com.netflix.eureka: INFO  # ✅ Moins verbeux
+    com.netflix.discovery: INFO
