@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- 📝 CONFIGURATION PROFESSIONNELLE DE LOGGING - VERSION SIMPLIFIÉE
+
+    Cette version N'UTILISE PAS les patterns Spring Boot avancés (%clr, %wEx)
+    qui causaient l'erreur. Elle fonctionne avec Logback standard.
+    -->
+
+    <!-- ============================================= -->
+    <!-- 📌 PROPRIÉTÉS (variables réutilisables)      -->
+    <!-- ============================================= -->
+
+    <!-- Dossier où stocker les logs -->
+    <property name="LOG_PATH" value="./logs" />
+
+    <!-- Nom du fichier de log -->
+    <property name="LOG_FILE" value="gateway" />
+
+    <!-- Pattern pour les logs en console (simplifié, sans couleurs) -->
+    <property name="CONSOLE_LOG_PATTERN"
+              value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%X{correlationId:-NO-ID}] %-5level %-40.40logger{39} : %msg%n" />
+
+    <!-- Pattern pour les logs en fichier (identique) -->
+    <property name="FILE_LOG_PATTERN"
+              value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%X{correlationId:-NO-ID}] %-5level %-40.40logger{39} : %msg%n" />
+
+
+    <!-- ============================================= -->
+    <!-- 🖥️ APPENDER CONSOLE (pour développement)    -->
+    <!-- ============================================= -->
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+
+        <!-- Filtre : log seulement à partir de DEBUG -->
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>DEBUG</level>
+        </filter>
+    </appender>
+
+
+    <!-- ============================================= -->
+    <!-- 📄 APPENDER FICHIER (pour production)       -->
+    <!-- ============================================= -->
+
+    <!-- Fichier principal : logs de toute l'application -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/${LOG_FILE}.log</file>
+
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+
+        <!-- 🔄 ROTATION : créer un nouveau fichier chaque jour -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- Pattern du nom : gateway-2025-10-27.log -->
+            <fileNamePattern>${LOG_PATH}/${LOG_FILE}-%d{yyyy-MM-dd}.log</fileNamePattern>
+
+            <!-- Garder 30 jours d'historique -->
+            <maxHistory>30</maxHistory>
+
+            <!-- Taille max totale : 1 GB -->
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+
+        <!-- Filtre : log à partir de INFO (pas DEBUG) -->
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+    </appender>
+
+
+    <!-- ============================================= -->
+    <!-- ❌ APPENDER ERREURS (fichier séparé)        -->
+    <!-- ============================================= -->
+
+    <!-- Fichier séparé pour les erreurs uniquement -->
+    <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/${LOG_FILE}-errors.log</file>
+
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/${LOG_FILE}-errors-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>500MB</totalSizeCap>
+        </rollingPolicy>
+
+        <!-- Filtre : seulement ERROR et FATAL -->
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+    </appender>
+
+
+    <!-- ============================================= -->
+    <!-- 📊 APPENDER JSON (pour ELK/Splunk)          -->
+    <!-- ============================================= -->
+
+    <!-- Logs en format JSON structuré pour outils de monitoring -->
+    <appender name="JSON_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/${LOG_FILE}-json.log</file>
+
+        <!-- Encoder JSON avec Logstash -->
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <!-- Ajouter des champs custom -->
+            <customFields>{"app":"cinema-gateway","environment":"production"}</customFields>
+
+            <!-- Inclure le MDC (donc le correlationId) -->
+            <includeMdcKeyName>correlationId</includeMdcKeyName>
+        </encoder>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/${LOG_FILE}-json-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+
+
+    <!-- ============================================= -->
+    <!-- 🎯 LOGGERS PAR PACKAGE                      -->
+    <!-- ============================================= -->
+
+    <!-- Logger pour ton package principal (niveau DEBUG en dev) -->
+    <logger name="com.spring.gateway" level="DEBUG" />
+
+    <!-- Logger pour les filtres (très détaillé) -->
+    <logger name="com.spring.gateway.filter" level="DEBUG" />
+
+    <!-- Logger Spring Cloud Gateway (modéré) -->
+    <logger name="org.springframework.cloud.gateway" level="INFO" />
+
+    <!-- Logger Reactor Netty (modéré - sinon trop de logs !) -->
+    <logger name="reactor.netty" level="INFO" />
+
+    <!-- Logger Spring Framework (modéré) -->
+    <logger name="org.springframework" level="INFO" />
+
+    <!-- Logger Hibernate/JPA (désactivé sauf si besoin) -->
+    <logger name="org.hibernate" level="WARN" />
+
+
+    <!-- ============================================= -->
+    <!-- 📍 LOGGER ROOT (par défaut)                 -->
+    <!-- ============================================= -->
+
+    <!-- Configuration selon l'environnement -->
+
+    <!-- 🟢 PROFIL "dev" : Logs détaillés en console -->
+    <springProfile name="dev,default">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE" />
+        </root>
+    </springProfile>
+
+    <!-- 🔵 PROFIL "docker" : Logs modérés (console + fichiers) -->
+    <springProfile name="docker">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE" />
+            <appender-ref ref="FILE" />
+            <appender-ref ref="ERROR_FILE" />
+        </root>
+    </springProfile>
+
+    <!-- 🔴 PROFIL "production" : Logs en fichiers + JSON -->
+    <springProfile name="production,prod">
+        <root level="INFO">
+            <appender-ref ref="FILE" />
+            <appender-ref ref="ERROR_FILE" />
+            <appender-ref ref="JSON_FILE" />
+        </root>
+    </springProfile>
+
+</configuration>
+
+        <!--
+        💡 DIFFÉRENCE AVEC L'ANCIENNE VERSION
+        ======================================
+
+        AVANT (causait l'erreur) :
+        - Utilisait %clr pour les couleurs (converter Spring Boot)
+        - Utilisait %wEx pour les exceptions (converter Spring Boot)
+        - Nécessitait des classes Spring Boot spécifiques
+
+        APRÈS (fonctionne partout) :
+        - Patterns Logback standard uniquement
+        - Pas de couleurs (mais ça fonctionne !)
+        - Compatible avec tous les environnements
+
+        NOTE : Les logs sont maintenant en noir et blanc en console,
+        mais c'est un petit compromis pour la stabilité !
+        Si tu veux les couleurs, on les ajoutera après avec une config Spring Boot complète.
+
+        📊 EXEMPLE DE LOGS
+        ==================
+
+        Console :
+        2025-10-27 14:30:12.001 [abc-123] INFO  CorrelationIdFilter : 🆕 Nouveau Correlation ID généré : abc-123
+        2025-10-27 14:30:12.002 [abc-123] INFO  LoggingFilter       : ➡️ Requête entrante : GET /movies/v1/1 - IP: 127.0.0.1
+        2025-10-27 14:30:12.156 [abc-123] INFO  LoggingFilter       : ⬅️ ✅ Succès : GET /movies/v1/1 - Status: 200 - Durée: 154ms
+
+        Fichier (gateway.log) :
+        2025-10-27 14:30:12.001 [abc-123] INFO  CorrelationIdFilter : 🆕 Nouveau Correlation ID généré : abc-123
+
+        JSON (gateway-json.log) :
+        {"timestamp":"2025-10-27T14:30:12.001Z","level":"INFO","logger":"CorrelationIdFilter","message":"Nouveau Correlation ID généré","correlationId":"abc-123","app":"cinema-gateway"}
+        -->

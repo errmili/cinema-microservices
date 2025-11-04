@@ -86,6 +86,38 @@
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-config</artifactId>
 		</dependency>
+
+		<!-- ✅ 1. SLF4J avec Logback (déjà inclus avec Spring Boot normalement, mais on s'assure) -->
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+		</dependency>
+
+		<!-- ✅ 2. Logstash Encoder pour logs JSON structurés (format pro pour ELK stack) -->
+		<dependency>
+			<groupId>net.logstash.logback</groupId>
+			<artifactId>logstash-logback-encoder</artifactId>
+			<version>7.4</version>
+		</dependency>
+
+		<!-- ✅ 3. Micrometer pour les métriques (on l'utilisera à l'étape 4, mais on l'ajoute maintenant) -->
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-core</artifactId>
+		</dependency>
+
+		<!-- ✅ 4. Spring Boot Actuator (pour monitoring) -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+
+		<!-- ✅ 5. Lombok (pour réduire le code boilerplate - optionnel mais recommandé) -->
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<optional>true</optional>
+		</dependency>
 	</dependencies>
 
 	<dependencyManagement>

@@ -1,10 +1,9 @@
 
-@	java:S106"+Replace this use of System.out by a logger.(Üùıü
-@	java:S106*"+Replace this use of System.out by a logger.(©›‰¡
-E	java:S106+"+Replace this use of System.out by a logger.(¤Ñ÷ªùÿÿÿÿ
-D
-java:S1874-".Remove this use of "parser"; it is deprecated.(¤‹ıà
-P
-java:S1874."5Remove this use of "setSigningKey"; it is deprecated.(Õ÷„Òıÿÿÿÿ
-@	java:S1061"+Replace this use of System.out by a logger.(®Àºš
-?	java:S1065"+Replace this use of System.out by a logger.(İ‚ø
+F
+java:S2629H"$Invoke method(s) only conditionally.(‚¢æ‘şÿÿÿÿ8ÆÙÄ°¢3
+m
+java:S2259"OA "NullPointerException" could be thrown; "getRemoteAddress()" can return null.(ğöéÇ8·ÚÄ°¢3
+K
+java:S1874W".Remove this use of "parser"; it is deprecated.(¤‹ıà8ËÚÄ°¢3
+W
+java:S1874X"5Remove this use of "setSigningKey"; it is deprecated.(Õ÷„Òıÿÿÿÿ8ÌÚÄ°¢3
