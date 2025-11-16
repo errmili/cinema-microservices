@@ -1,4 +1,5 @@
-FROM openjdk:17-jdk-slim
+# ✅ Image Java moderne et maintenue
+FROM eclipse-temurin:17-jre-alpine
 
 WORKDIR /app
 
