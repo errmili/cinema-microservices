@@ -7,6 +7,336 @@ spring:
   config:
     import: "optional:configserver:http://localhost:8888/"
 
+# ⚡ CONFIGURATION RESILIENCE4J - À AJOUTER DANS application.yml ou application-docker.yml
+
+# ============================================
+# 🔴 CIRCUIT BREAKER CONFIGURATION
+# ============================================
+resilience4j:
+  circuitbreaker:
+    # Configuration des circuit breakers individuels
+    instances:
+      # 🎬 Circuit Breaker pour MOVIE SERVICE
+      movieServiceCircuitBreaker:
+        # Taux d'échec pour ouvrir le circuit (50% = si 50% des requêtes échouent)
+        failureRateThreshold: 50
+
+        # Taux de requêtes lentes pour ouvrir le circuit (80% = si 80% sont lentes)
+        slowCallRateThreshold: 80
+
+        # Durée considérée comme "lente" (2 secondes)
+        slowCallDurationThreshold: 2s
+
+        # Nombre minimum de requêtes avant d'évaluer (10 requêtes)
+        # Le circuit ne s'ouvrira pas tant qu'on n'a pas au moins 10 requêtes
+        minimumNumberOfCalls: 10
+
+        # Nombre de requêtes pour calculer le taux (fenêtre glissante de 20)
+        slidingWindowSize: 20
+
+        # Type de fenêtre : COUNT_BASED (par nombre) ou TIME_BASED (par temps)
+        slidingWindowType: COUNT_BASED
+
+        # Durée d'attente avant de passer en HALF_OPEN (30 secondes)
+        waitDurationInOpenState: 30s
+
+        # Nombre de requêtes en HALF_OPEN pour tester (3 tentatives)
+        permittedNumberOfCallsInHalfOpenState: 3
+
+        # Passer automatiquement en HALF_OPEN (true) ou attendre (false)
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+
+        # Enregistrer les exceptions comme des échecs
+#        recordExceptions:
+#          - org.springframework.web.client.HttpServerErrorException
+#          - java.util.concurrent.TimeoutException
+#          - java.io.IOException
+
+        # Ignorer certaines exceptions (ne pas compter comme échec)
+#        ignoreExceptions:
+#          - com.spring.gateway.exception.BusinessException
+
+      # 🎭 Circuit Breaker pour CINEMA SERVICE
+      cinemaServiceCircuitBreaker:
+        failureRateThreshold: 50
+        slowCallRateThreshold: 80
+        slowCallDurationThreshold: 2s
+        minimumNumberOfCalls: 10
+        slidingWindowSize: 20
+        slidingWindowType: COUNT_BASED
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+
+      # 🎫 Circuit Breaker pour BOOKING SERVICE
+      bookingServiceCircuitBreaker:
+        failureRateThreshold: 50
+        slowCallRateThreshold: 80
+        slowCallDurationThreshold: 3s  # Booking peut être plus lent (transactions)
+        minimumNumberOfCalls: 10
+        slidingWindowSize: 20
+        slidingWindowType: COUNT_BASED
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+
+      # 👤 Circuit Breaker pour USER MANAGEMENT
+      userManagementCircuitBreaker:
+        failureRateThreshold: 50
+        slowCallRateThreshold: 80
+        slowCallDurationThreshold: 1s  # Auth doit être rapide
+        minimumNumberOfCalls: 10
+        slidingWindowSize: 20
+        slidingWindowType: COUNT_BASED
+        waitDurationInOpenState: 20s  # Moins d'attente pour l'auth
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+
+  # ============================================
+  # 🔄 RETRY CONFIGURATION
+  # ============================================
+  retry:
+    instances:
+      # 🎬 Retry pour MOVIE SERVICE
+      movieServiceRetry:
+        # Nombre maximum de tentatives (3 au total = 1 initiale + 2 retry)
+        maxAttempts: 3
+
+        # Attente entre les tentatives (500ms)
+        waitDuration: 500ms
+
+        # Multiplier le délai à chaque tentative (backoff exponentiel)
+        enableExponentialBackoff: true
+
+        # Multiplicateur pour le backoff (2x à chaque fois)
+        exponentialBackoffMultiplier: 2
+
+        # Retry sur ces exceptions
+        retryExceptions:
+          - org.springframework.web.client.ResourceAccessException
+          - java.util.concurrent.TimeoutException
+
+        # Ne PAS retry sur ces exceptions
+#        ignoreExceptions:
+#          - java.lang.IllegalArgumentException
+
+      # 🎭 Retry pour CINEMA SERVICE
+      cinemaServiceRetry:
+        maxAttempts: 3
+        waitDuration: 500ms
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+
+      # 🎫 Retry pour BOOKING SERVICE (moins de retry pour éviter doublons)
+      bookingServiceRetry:
+        maxAttempts: 2  # Seulement 2 tentatives (risque de double réservation)
+        waitDuration: 1s
+        enableExponentialBackoff: false
+
+      # 👤 Retry pour USER MANAGEMENT
+      userManagementRetry:
+        maxAttempts: 3
+        waitDuration: 300ms  # Plus rapide pour l'auth
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+
+  # ============================================
+  # ⏱️ TIME LIMITER CONFIGURATION (Timeouts)
+  # ============================================
+  timelimiter:
+    instances:
+      # 🎬 Timeout pour MOVIE SERVICE
+      movieServiceTimeLimiter:
+        timeoutDuration: 3s  # Maximum 3 secondes
+        cancelRunningFuture: true  # Annuler si timeout
+
+      # 🎭 Timeout pour CINEMA SERVICE
+      cinemaServiceTimeLimiter:
+        timeoutDuration: 3s
+        cancelRunningFuture: true
+
+      # 🎫 Timeout pour BOOKING SERVICE
+      bookingServiceTimeLimiter:
+        timeoutDuration: 5s  # Plus de temps pour les transactions
+        cancelRunningFuture: true
+
+      # 👤 Timeout pour USER MANAGEMENT
+      userManagementTimeLimiter:
+        timeoutDuration: 2s  # Auth doit être rapide
+        cancelRunningFuture: true
+
+  # ============================================
+  # 🚢 BULKHEAD CONFIGURATION (Isolation)
+  # ============================================
+  bulkhead:
+    instances:
+      # 🎬 Bulkhead pour MOVIE SERVICE
+      movieServiceBulkhead:
+        # Nombre max d'appels concurrents
+        maxConcurrentCalls: 10
+
+        # Durée max d'attente pour un slot (0 = pas d'attente)
+        maxWaitDuration: 0ms
+
+      # 🎭 Bulkhead pour CINEMA SERVICE
+      cinemaServiceBulkhead:
+        maxConcurrentCalls: 10
+        maxWaitDuration: 0ms
+
+      # 🎫 Bulkhead pour BOOKING SERVICE
+      bookingServiceBulkhead:
+        maxConcurrentCalls: 5  # Moins de concurrence pour éviter les conflits
+        maxWaitDuration: 100ms
+
+      # 👤 Bulkhead pour USER MANAGEMENT
+      userManagementBulkhead:
+        maxConcurrentCalls: 20  # Plus pour l'auth (beaucoup d'utilisateurs)
+        maxWaitDuration: 0ms
+
+  # ============================================
+  # 🛡️ RATE LIMITER CONFIGURATION
+  # ============================================
+  ratelimiter:
+    instances:
+      # 🎬 Rate Limiter pour MOVIE SERVICE
+      movieServiceRateLimiter:
+        # Période de rafraîchissement (1 seconde)
+        limitRefreshPeriod: 1s
+
+        # Nombre de permissions par période (100 requêtes/seconde)
+        limitForPeriod: 100
+
+        # Durée d'attente pour obtenir une permission (0 = échec immédiat)
+        timeoutDuration: 0ms
+
+      # 🎭 Rate Limiter pour CINEMA SERVICE
+      cinemaServiceRateLimiter:
+        limitRefreshPeriod: 1s
+        limitForPeriod: 100
+        timeoutDuration: 0ms
+
+      # 🎫 Rate Limiter pour BOOKING SERVICE
+      bookingServiceRateLimiter:
+        limitRefreshPeriod: 1s
+        limitForPeriod: 50  # Moins pour éviter la surcharge
+        timeoutDuration: 100ms
+
+      # 👤 Rate Limiter pour USER MANAGEMENT
+      userManagementRateLimiter:
+        limitRefreshPeriod: 1s
+        limitForPeriod: 200  # Plus pour l'auth
+        timeoutDuration: 0ms
+
+# ============================================
+# 📊 ACTUATOR & METRICS
+# ============================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"  # Expose tous les endpoints Actuator
+  endpoint:
+    health:
+      show-details: always
+  health:
+    circuitbreakers:
+      enabled: true  # Afficher l'état des circuit breakers dans /actuator/health
+
+# ============================================
+# 📝 LOGGING
+# ============================================
+logging:
+  level:
+    io.github.resilience4j: DEBUG  # Voir les logs Resilience4j en détail
+
+# ============================================
+# 💡 EXPLICATION DES VALEURS
+# ============================================
+
+# CIRCUIT BREAKER :
+# -----------------
+# failureRateThreshold: 50
+#   → Si 50% des requêtes échouent, ouvre le circuit
+#
+# slowCallRateThreshold: 80
+#   → Si 80% des requêtes sont lentes, ouvre le circuit
+#
+# slowCallDurationThreshold: 2s
+#   → Une requête est "lente" si elle prend plus de 2s
+#
+# minimumNumberOfCalls: 10
+#   → Il faut au moins 10 requêtes avant d'ouvrir le circuit
+#   → Évite d'ouvrir trop vite (1 erreur sur 2 requêtes = pas grave)
+#
+# waitDurationInOpenState: 30s
+#   → Attendre 30s avant de tester si le service est revenu
+#
+# permittedNumberOfCallsInHalfOpenState: 3
+#   → Faire 3 requêtes de test en HALF_OPEN
+#   → Si les 3 réussissent → CLOSED
+#   → Si 1 échoue → OPEN
+
+# RETRY :
+# -------
+# maxAttempts: 3
+#   → Réessayer 3 fois (1 initiale + 2 retry)
+#
+# waitDuration: 500ms
+#   → Attendre 500ms entre les tentatives
+#
+# enableExponentialBackoff: true
+#   → Augmenter le délai à chaque tentative
+#   → Tentative 1 → attendre 500ms
+#   → Tentative 2 → attendre 1000ms (500ms × 2)
+#   → Tentative 3 → attendre 2000ms (1000ms × 2)
+
+# TIME LIMITER :
+# --------------
+# timeoutDuration: 3s
+#   → Si la requête prend plus de 3s → timeout
+#
+# cancelRunningFuture: true
+#   → Annuler la requête si timeout (libérer les ressources)
+
+# BULKHEAD :
+# ----------
+# maxConcurrentCalls: 10
+#   → Maximum 10 requêtes simultanées vers ce service
+#   → La 11ème sera rejetée (ou mise en attente si maxWaitDuration > 0)
+
+# RATE LIMITER :
+# --------------
+# limitForPeriod: 100
+#   → 100 requêtes max par période
+#
+# limitRefreshPeriod: 1s
+#   → Période de 1 seconde
+#   → = 100 requêtes/seconde max
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #server:
 #  port: 8080  # Le port de l'API Gateway
 #

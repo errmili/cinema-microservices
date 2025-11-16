@@ -16,41 +16,194 @@ spring:
       discovery:
         locator:
           enabled: false
+
+
+      # ============================================
+      # 🌐 ROUTES AVEC CIRCUIT BREAKER
+      # ============================================
       routes:
+        # ============================================
+        # 👤 ROUTE USER MANAGEMENT (Authentication)
+        # ============================================
         # Routes avec priorité explicite et noms uniques
+
         - id: auth-route
           uri: http://user-management:8083  # Utiliser nom Docker direct
           predicates:
             - Path=/api/auth/**
           filters:
             - AddRequestHeader=X-Request-Foo, Bar
+
+            # ⚡ CIRCUIT BREAKER
+            - name: CircuitBreaker
+              args:
+                name: userManagementCircuitBreaker
+                fallbackUri: forward:/fallback/user-management
+            # 🔄 RETRY
+            - name: Retry
+              args:
+                retries: 3
+                backoff:
+                  firstBackoff: 300ms
+                  maxBackoff: 2s
+                  factor: 2
+                  basedOnPreviousValue: false
+
           metadata:
             response-timeout: 5000
             connect-timeout: 3000
 
+        # ============================================
+        # 🎬 ROUTE MOVIE SERVICE
+        # ============================================
         - id: movies-route
-          uri: http://movie-service:8080  # Utiliser nom Docker direct
+          uri: http://movie-service:8080
           predicates:
             - Path=/movies/v1/**
-          metadata:
-            response-timeout: 5000
-            connect-timeout: 3000
+          filters:
+            # ⚡ CIRCUIT BREAKER
+            - name: CircuitBreaker
+              args:
+                name: movieServiceCircuitBreaker
+                fallbackUri: forward:/fallback/movie-service
 
+            # 🔄 RETRY
+            - name: Retry
+              args:
+                retries: 3
+                backoff:
+                  firstBackoff: 500ms
+                  maxBackoff: 3s
+                  factor: 2
+                  basedOnPreviousValue: false
+
+          metadata:
+            response-timeout: 3000
+            connect-timeout: 1000
+
+
+        # ============================================
+        # 🎫 ROUTE BOOKING SERVICE (Reservations)
+        # ============================================
         - id: reservations-route
-          uri: http://booking-service:7000  # Utiliser nom Docker direct
+          uri: http://booking-service:7000
           predicates:
             - Path=/reservations/v1/**
-          metadata:
-            response-timeout: 5000
-            connect-timeout: 3000
+          filters:
+            # ⚡ CIRCUIT BREAKER
+            - name: CircuitBreaker
+              args:
+                name: bookingServiceCircuitBreaker
+                fallbackUri: forward:/fallback/booking-service
 
+            # 🔄 RETRY (moins de retry pour éviter double réservation)
+            - name: Retry
+              args:
+                retries: 2
+                backoff:
+                  firstBackoff: 1s
+                  maxBackoff: 3s
+                  factor: 2
+                  basedOnPreviousValue: false
+
+          metadata:
+            response-timeout: 5000  # Plus de temps pour les transactions
+            connect-timeout: 1000
+
+        # ============================================
+        # 🎭 ROUTE CINEMA SERVICE
+        # ============================================
         - id: cinema-route
-          uri: http://cinema-service:9090  # Utiliser nom Docker direct
+          uri: http://cinema-service:9090
           predicates:
             - Path=/cinema/v1/**
+          filters:
+            # ⚡ CIRCUIT BREAKER
+            - name: CircuitBreaker
+              args:
+                name: cinemaServiceCircuitBreaker
+                fallbackUri: forward:/fallback/cinema-service
+
+            # 🔄 RETRY
+            - name: Retry
+              args:
+                retries: 3
+                backoff:
+                  firstBackoff: 500ms
+                  maxBackoff: 3s
+                  factor: 2
+                  basedOnPreviousValue: false
+
           metadata:
-            response-timeout: 5000
-            connect-timeout: 3000
+            response-timeout: 3000
+            connect-timeout: 1000
+
+# ============================================
+# 🔴 CONFIGURATION RESILIENCE4J
+# ============================================
+resilience4j:
+  circuitbreaker:
+    instances:
+      userManagementCircuitBreaker:
+        failureRateThreshold: 50
+        slowCallRateThreshold: 80
+        slowCallDurationThreshold: 1s
+        minimumNumberOfCalls: 5  # Moins en Docker (moins de trafic)
+        slidingWindowSize: 10
+        slidingWindowType: COUNT_BASED
+        waitDurationInOpenState: 20s
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+
+      movieServiceCircuitBreaker:
+        failureRateThreshold: 50
+        slowCallRateThreshold: 80
+        slowCallDurationThreshold: 2s
+        minimumNumberOfCalls: 5
+        slidingWindowSize: 10
+        slidingWindowType: COUNT_BASED
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+
+      cinemaServiceCircuitBreaker:
+        failureRateThreshold: 50
+        slowCallRateThreshold: 80
+        slowCallDurationThreshold: 2s
+        minimumNumberOfCalls: 5
+        slidingWindowSize: 10
+        slidingWindowType: COUNT_BASED
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+
+      bookingServiceCircuitBreaker:
+        failureRateThreshold: 50
+        slowCallRateThreshold: 80
+        slowCallDurationThreshold: 3s
+        minimumNumberOfCalls: 5
+        slidingWindowSize: 10
+        slidingWindowType: COUNT_BASED
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+
+  timelimiter:
+    instances:
+      userManagementCircuitBreaker:
+        timeoutDuration: 2s
+        cancelRunningFuture: true
+      movieServiceCircuitBreaker:
+        timeoutDuration: 3s
+        cancelRunningFuture: true
+      cinemaServiceCircuitBreaker:
+        timeoutDuration: 3s
+        cancelRunningFuture: true
+      bookingServiceCircuitBreaker:
+        timeoutDuration: 5s
+        cancelRunningFuture: true
+
+
 
 # Configuration Eureka - SIMPLIFIEE pour Docker
 eureka:
@@ -81,6 +234,11 @@ management:
   endpoint:
     health:
       show-details: always
+  health:
+    circuitbreakers:
+      enabled: true
+    ratelimiters:
+      enabled: true
 
 # Logging avec plus de détails pour debug
 logging:
