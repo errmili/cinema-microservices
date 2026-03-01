@@ -23,28 +23,39 @@ import com.cinema.booking.application.usecase.TicketServiceImpl;
 import com.cinema.booking.handler.BusinessErrorCodes;
 import com.cinema.booking.infrastructure.validators.ObjectsValidator;
 
-
+/**
+ * Classe de test pour TicketServiceImpl
+ * Utilise Mockito pour simuler les dépendances et tester les différents scénarios
+ */
 // Annotation pour intégrer Mockito avec JUnit 5
 @ExtendWith(MockitoExtension.class)
 class TicketServiceImplTest {
 
+    // Mock du repository - simule l'accès à la base de données
     @Mock
     private TicketRepository ticketRepository;
 
+    // Mock du validateur - simule la validation des objets TicketDTO
     @Mock
     private ObjectsValidator<TicketDTO> objectsValidator;
 
+    // Instance de la classe à tester - les mocks sont automatiquement injectés
     @InjectMocks
     private TicketServiceImpl ticketService;
 
-    // Méthode utilitaire pour créer un TicketDTO valide
+    /**
+     * Méthode utilitaire pour créer un TicketDTO valide
+     * Évite la duplication de code dans les tests
+     *
+     * @return TicketDTO avec toutes les propriétés initialisées
+     */
     private TicketDTO createValidTicketDTO() {
         return TicketDTO.builder()
-                .nomClient("John Doe")        // Initialiser nomClient
-                .codePaiement("ABC123")      // Initialiser codePaiement
-                .prix(10.0)                  // Initialiser prix
-                .projectionId(104L)          // Initialiser projectionId
-                .placeId(4L)                 // Initialiser placeId
+                .nomClient("John Doe")        // Nom du client
+                .codePaiement("ABC123")       // Code de paiement unique
+                .prix(10.0)                   // Prix du ticket
+                .projectionId(104L)           // ID de la projection (séance)
+                .placeId(4L)                  // ID de la place dans la salle
                 .build();
     }
 
@@ -60,6 +71,7 @@ class TicketServiceImplTest {
         // Arrange
         TicketDTO ticketDTO = createValidTicketDTO();
 
+        // Création de l'entité Ticket qui sera retournée par le repository
         Ticket ticketEntity = new Ticket();
         ticketEntity.setPrix(10.0);  // Assurez-vous que le Ticket créé a également une valeur pour prix
         ticketEntity.setNomClient("John Doe");
@@ -67,17 +79,19 @@ class TicketServiceImplTest {
         ticketEntity.setProjectionId(104L);
         ticketEntity.setPlaceId(4L);
 
-        // Nous vérifions que la méthode validate est appelée
+        // Simule que la validation réussit (ne lance pas d'exception)
         doNothing().when(objectsValidator).validate(ticketDTO); // Ne fait rien, simulateur valide
 
+        // Simule que la place n'est pas déjà réservée
         when(ticketRepository.existsByPlaceIdAndReserveTrue(ticketDTO.getPlaceId())).thenReturn(false);
 
+        // Simule la sauvegarde réussie en retournant l'entité
         when(ticketRepository.save(any(Ticket.class))).thenReturn(ticketEntity); // Simuler la sauvegarde
 
-        // Act
+        // Act - Exécution de la méthode à tester
         TicketDTO savedTicket = ticketService.save(ticketDTO);
 
-        // Assert
+        // Assert - Vérifications des résultats
         assertNotNull(savedTicket); // Vérifie que le ticket sauvegardé n'est pas null
         assertEquals("John Doe", savedTicket.getNomClient());
         verify(objectsValidator, times(1)).validate(ticketDTO); // Vérifie que validate a été appelé une fois
