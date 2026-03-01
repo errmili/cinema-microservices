@@ -8,3 +8,7 @@ user-management, movie-service, etc.
 
 api-gateway
 
+______________________________ Docker ______________
+
+docker-compose down
+docker-compose -f test-movie.yml up -d // docker-compose -f test-movie.yml up --build
