@@ -1,29 +1,80 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
+<!-- 💡 Ce fichier sert à configurer le système de LOGS de l'application
+     Les logs c'est comme la boîte noire d'un avion : tout ce qui se passe est enregistré ici
+     Spring Boot utilise Logback par défaut, et ce fichier lui dit COMMENT et OÙ écrire les logs -->
 <configuration>
 
     <!-- Pattern SANS couleurs pour Docker -->
+    <!-- 💡 Un "pattern" sert à définir le FORMAT d'affichage de chaque ligne de log
+         Chaque log ressemblera à :
+         2024-01-15 10:30:01.123 [abc-123-xyz] INFO  com.spring.gateway.filter.AuthenticationFilter : ✅ JWT valide
+         Détail de chaque partie :
+         %d{yyyy-MM-dd HH:mm:ss.SSS}   → la date et l'heure précise du log
+         [%X{correlationId:-NO-ID}]    → l'ID unique de la requête (posé par CorrelationIdFilter)
+                                          si absent, affiche "NO-ID"
+         %-5level                      → le niveau du log (INFO, DEBUG, WARN, ERROR) sur 5 caractères
+         %-40.40logger{39}             → le nom de la classe qui a écrit le log (max 40 caractères)
+         %msg%n                        → le message du log + retour à la ligne -->
     <property name="CONSOLE_LOG_PATTERN"
               value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%X{correlationId:-NO-ID}] %-5level %-40.40logger{39} : %msg%n" />
 
+    <!-- 💡 Même pattern que CONSOLE_LOG_PATTERN
+         On le définit séparément pour pouvoir le personnaliser plus tard
+         si on veut un format différent dans les fichiers vs la console -->
     <property name="FILE_LOG_PATTERN"
               value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%X{correlationId:-NO-ID}] %-5level %-40.40logger{39} : %msg%n" />
 
     <!-- Console Appender -->
+    <!-- 💡 Un "appender" sert à définir OÙ écrire les logs
+         CONSOLE = écrire dans le terminal (la sortie standard)
+         C'est ce que tu vois dans ton IDE ou dans "docker logs mon-container" -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
+            <!-- 💡 On dit à cet appender d'utiliser le pattern qu'on a défini au-dessus -->
             <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+            <!-- 💡 UTF-8 sert à supporter les caractères spéciaux (accents, emojis ✅ ⚠️ ❌) -->
             <charset>UTF-8</charset>
         </encoder>
     </appender>
 
     <!-- Loggers -->
+    <!-- 💡 Les loggers servent à contrôler le NIVEAU de détail des logs par package
+         Il existe 5 niveaux du plus détaillé au plus grave :
+         DEBUG → TRACE détaillé, utile en développement
+         INFO  → informations normales de fonctionnement
+         WARN  → avertissement, quelque chose d'anormal mais pas bloquant
+         ERROR → erreur grave, quelque chose a planté
+         Si tu mets level="INFO", tu verras INFO + WARN + ERROR (mais PAS DEBUG)
+         Si tu mets level="DEBUG", tu verras TOUT -->
+
+    <!-- 💡 Cela sert à activer les logs DEBUG pour TOUT ton code métier (gateway)
+         Tu verras tous les détails de ce qui se passe dans tes classes -->
     <logger name="com.spring.gateway" level="DEBUG" />
+
+    <!-- 💡 Cela sert à activer les logs DEBUG spécifiquement pour tes filtres
+         (CorrelationIdFilter, LoggingFilter, AuthenticationFilter)
+         Redondant avec le logger au-dessus mais permet de le cibler précisément -->
     <logger name="com.spring.gateway.filter" level="DEBUG" />
+
+    <!-- 💡 Cela sert à limiter les logs de Spring Cloud Gateway à INFO
+         Spring Gateway est très verbeux en DEBUG → ça noierait tes propres logs
+         Avec INFO, tu vois seulement les infos importantes du framework -->
     <logger name="org.springframework.cloud.gateway" level="INFO" />
+
+    <!-- 💡 Cela sert à activer les logs DEBUG pour Resilience4j
+         Resilience4j gère le Circuit Breaker (le disjoncteur qui coupe les appels
+         vers un service en panne) → utile pour déboguer les problèmes de résilience -->
     <logger name="io.github.resilience4j" level="DEBUG" />
 
     <!-- Root Logger -->
+    <!-- 💡 Le "root logger" sert à définir le comportement PAR DÉFAUT pour tout ce qui
+         n'est pas couvert par les loggers spécifiques au-dessus
+         level="INFO" → par défaut, on affiche INFO + WARN + ERROR (pas DEBUG)
+         pour les librairies externes qu'on n'a pas listées explicitement -->
     <root level="INFO">
+        <!-- 💡 Cela sert à brancher le root logger sur l'appender CONSOLE
+             Sans cette ligne, aucun log ne serait affiché dans le terminal ! -->
         <appender-ref ref="CONSOLE" />
     </root>
 

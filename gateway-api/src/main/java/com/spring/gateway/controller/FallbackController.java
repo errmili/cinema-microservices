@@ -55,24 +55,42 @@ import java.util.Map;
  * /fallback/user-management  → Fallback pour user-management
  * /fallback/default          → Fallback générique
  */
+
+// 💡 @RestController sert à dire à Spring : "Cette classe est un contrôleur REST"
+//    Elle peut recevoir des requêtes HTTP et retourner des réponses JSON automatiquement
+// 💡 @RequestMapping("/fallback") sert à définir le préfixe de toutes les routes de cette classe
+//    Toutes les méthodes ici seront accessibles sous /fallback/...
 @RestController
 @RequestMapping("/fallback")
 public class FallbackController {
 
+    // 💡 Cela sert à écrire des messages dans les logs quand un fallback est activé
+    //    On saura exactement quel service est tombé et à quelle heure
     private static final Logger logger = LoggerFactory.getLogger(FallbackController.class);
 
     /**
      * 🎬 FALLBACK MOVIE SERVICE
      * Appelé quand movie-service est DOWN
      */
+    // 💡 Ces 4 annotations servent à intercepter TOUS les types de requêtes HTTP
+    //    GET, POST, PUT, DELETE → peu importe ce que le client envoyait,
+    //    si movie-service est mort, toutes ses requêtes atterrissent ici
     @GetMapping("/movie-service")
     @PostMapping("/movie-service")
     @PutMapping("/movie-service")
     @DeleteMapping("/movie-service")
+    // 💡 Mono<ResponseEntity<...>> : c'est la façon "réactive" de retourner une réponse en Spring WebFlux
+    //    Mono = un seul résultat asynchrone (comme une Promise en JavaScript)
+    //    ResponseEntity = une réponse HTTP complète avec son statut (503, 200...) + son body
+    //    Map<String, Object> = le body de la réponse en JSON
     public Mono<ResponseEntity<Map<String, Object>>> movieServiceFallback() {
         logger.warn("🎬 ⚠️ FALLBACK activé pour MOVIE-SERVICE");
 
+        // 💡 Mono.just(...) sert à emballer une valeur dans un Mono
+        //    C'est comme dire "retourne immédiatement cette réponse de façon réactive"
         return Mono.just(ResponseEntity
+                // 💡 503 SERVICE_UNAVAILABLE = "Le serveur existe mais le service est temporairement indisponible"
+                //    C'est plus précis que 500 (erreur interne) : ici on sait que c'est un service en panne
                 .status(HttpStatus.SERVICE_UNAVAILABLE)
                 .body(createFallbackResponse(
                         "Le service de films est temporairement indisponible. Réessayez dans quelques instants.",
@@ -141,6 +159,8 @@ public class FallbackController {
      * 🌐 FALLBACK DEFAULT (générique)
      * Appelé pour tout autre service
      */
+    // 💡 Ce fallback "default" sert de filet de sécurité pour n'importe quel service
+    //    non listé au-dessus → on ne laisse jamais le client sans réponse
     @GetMapping("/default")
     @PostMapping("/default")
     @PutMapping("/default")
@@ -163,17 +183,29 @@ public class FallbackController {
      * @param serviceName Nom du service en panne
      * @return Map contenant la réponse fallback
      */
+    // 💡 Cette méthode privée sert à centraliser la construction de la réponse JSON
+    //    Au lieu de répéter le même code dans chaque fallback, on l'écrit UNE SEULE FOIS ici
+    //    C'est le principe DRY : "Don't Repeat Yourself" → règle d'or du développeur Senior !
     private Map<String, Object> createFallbackResponse(String message, String serviceName) {
+
+        // 💡 HashMap sert à construire un objet JSON clé/valeur
+        //    Chaque response.put("clé", valeur) = une propriété dans le JSON retourné au client
         Map<String, Object> response = new HashMap<>();
 
         // Informations principales
-        response.put("status", HttpStatus.SERVICE_UNAVAILABLE.value());
+        // 💡 On retourne le code HTTP 503 dans le body aussi (pas seulement dans le header)
+        //    pour que le frontend puisse l'afficher facilement
+        response.put("status", HttpStatus.SERVICE_UNAVAILABLE.value()); // → 503
         response.put("error", "Service Unavailable");
-        response.put("message", message);
+        response.put("message", message); // → message lisible par l'utilisateur
 
         // Métadonnées utiles
+        // 💡 "fallback: true" sert à indiquer au frontend que c'est une réponse de secours
+        //    Le frontend peut ainsi afficher un message spécial ou une UI dégradée
         response.put("fallback", true);  // Indique que c'est une réponse fallback
+        // 💡 "service" sert à savoir quel microservice est en panne dans les logs ou le monitoring
         response.put("service", serviceName);
+        // 💡 "timestamp" sert à horodater la panne → utile pour les rapports d'incidents
         response.put("timestamp", LocalDateTime.now().toString());
 
         // 💡 BONUS : Suggestions pour l'utilisateur
@@ -183,6 +215,17 @@ public class FallbackController {
         response.put("support", "Si le problème persiste, contactez le support");
 
         return response;
+        // 💡 Ce que le client reçoit finalement ressemble à ça en JSON :
+        // {
+        //   "status": 503,
+        //   "error": "Service Unavailable",
+        //   "message": "Le service de films est temporairement indisponible...",
+        //   "fallback": true,
+        //   "service": "movie-service",
+        //   "timestamp": "2024-01-15T10:30:01",
+        //   "suggestion": "Veuillez patienter...",
+        //   "support": "Si le problème persiste..."
+        // }
     }
 }
 
