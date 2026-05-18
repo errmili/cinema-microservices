@@ -1,6 +1,7 @@
 # IntelliJ IDEA
 .idea/
 *.iml
+.sonarlint/
 *.iws
 *.ipr
 out/

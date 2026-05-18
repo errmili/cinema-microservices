@@ -19,7 +19,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+    //Un filtre qui s'exécute AVANT chaque requête HTTP entrante pour vérifier le token JWT.
+    //Si OK → mettre l'user dans le SecurityContext (= "user authentifié")
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    //Un service qui charge un utilisateur depuis ta BDD à partir de son username/email.
     private final CustomUserDetailsService userDetailsService;
 
     @Bean
@@ -50,14 +54,18 @@ public class SecurityConfig {
                 .build();
     }
 
+    //C'est le "vérificateur de login/password" de Spring Security : il sait comment authentifier un user en BDD
     @Bean
     public AuthenticationProvider authenticationProvider() {
-        var provider = new DaoAuthenticationProvider();
-        provider.setUserDetailsService(userDetailsService);
-        provider.setPasswordEncoder(passwordEncoder());
+        var provider = new DaoAuthenticationProvider();  // ① Provider qui lit en BDD
+        provider.setUserDetailsService(userDetailsService);  // ② COMMENT trouver le user
+        provider.setPasswordEncoder(passwordEncoder());      // ③ COMMENT comparer le mot de passe
         return provider;
     }
 
+    //C'est le "chef d'orchestre" de l'authentification : c'est lui que tu appelles directement dans ton code pour déclencher le login.
+   //Pourquoi 2 beans (Manager + Provider) ? 🤔
+    //Parce qu'une app peut avoir plusieurs façons d'authentifier
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config)
             throws Exception {
